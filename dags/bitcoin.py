@@ -1,6 +1,5 @@
 import logging
 import requests
-
 from datetime import datetime
 from airflow.decorators import dag, task
 

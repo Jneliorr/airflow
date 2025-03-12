@@ -10,6 +10,7 @@ from google.cloud import bigquery
 # Variáveis com os nomes das tabelas
 leituraTabela = "infra-itaborai.dbt_cnpj_rfb.d_situacao_cadastral"
 salvarTabela = "infra-itaborai.teste2.airflow_situacao_cadastral"
+chave = BigQueryHook(gcp_conn_id='gcs_default')
 
 
 @dag(
@@ -22,31 +23,27 @@ def my_dag():
 
     @task(task_id="load")
     def load():
-        # Lê dados da tabela de origem no BigQuery
-        bq_hook = BigQueryHook(gcp_conn_id='gcs_default')
-        client = bq_hook.get_client()
-        query = f"SELECT * FROM `{leituraTabela}`"  # Usa a variável
+        # origem no BigQuery
+        client = chave.get_client()
+        query = f"SELECT * FROM `{leituraTabela}`"
         df = client.query(query).to_dataframe()
-        # df["id_situacao"] = df["id_situacao"].astype(str)
-        # df["descricao_situacao"] = df["descricao_situacao"].astype(str)
         logging.info(f"Dados lidos da tabela {leituraTabela}")
         return df.to_json(orient='split')
 
     @task(task_id="transform")
     def transform(data):
-        # Reconstrói o DataFrame a partir do JSON recebido
+        # JSON recebido
         df = pd.read_json(data, orient='split').astype(
             {'id_situacao': str, 'descricao_situacao': str})
-        # Filtra as linhas onde id_situacao é igual a "8"
-        df_filtered = df[df['id_situacao'] == "8"]
+        # df_filtered = df[df['id_situacao'] == "8"]
         logging.info("Seleção realizada com sucesso.")
-        return df_filtered.to_json(orient='split')
+        return df.to_json(orient='split')
 
     @task(task_id="save")
     def save(data):
-        # Reconstrói o DataFrame a partir do JSON recebido
+        #  JSON recebido
         df = pd.read_json(data, orient='split')
-        bq_hook = BigQueryHook(gcp_conn_id='gcs_default')
+        bq_hook = chave
         client = bq_hook.get_client()
         table_id = salvarTabela  # Utiliza a variável
         job_config = bigquery.LoadJobConfig(

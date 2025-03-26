@@ -7,6 +7,7 @@ from airflow.decorators import dag, task
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from google.cloud import bigquery
 
+
 # Variáveis com os nomes das tabelas
 leituraTabela = "infra-itaborai.dbt_cnpj_rfb.d_situacao_cadastral"
 salvarTabela = "infra-itaborai.teste2.airflow_situacao_cadastral"
